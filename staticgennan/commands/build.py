@@ -202,7 +202,7 @@ def _build_page(page, config, files, nav, env, dirty=False):
 
         # Activate page. Signals to theme that this is the current page.
         page.active = True
-
+        '''
         context = get_context(nav, files, config, page)
 
         # Allow 'template:' override in md source files.
@@ -210,16 +210,9 @@ def _build_page(page, config, files, nav, env, dirty=False):
             template = env.get_template(page.meta['template'])
         else:
             template = env.get_template('main.html')
-
-        # Run `page_context` plugin events.
-        # context = config['plugins'].run_event('page_context', context, page=page, config=config, nav=nav)
-
+        '''
         # Render the template.
-        # output = template.render(context)
         output = html_head + page.content.strip() + html_footer
-
-        # Run `post_page` plugin events.
-        #output = config['plugins'].run_event('post_page', output, page=page, config=config)
 
         # Write the output file.
         if output.strip():
@@ -238,12 +231,6 @@ def build(config, live_server=False, dirty=False):
     """ Perform a full site build. """
     from time import time
     start = time()
-
-    # Run `config` plugin events.
-    # config = config['plugins'].run_event('config', config)
-
-    # Run `pre_build` plugin events.
-    # config['plugins'].run_event('pre_build', config=config)
 
     if not dirty:
         log.info("Cleaning site directory")
@@ -264,13 +251,8 @@ def build(config, live_server=False, dirty=False):
     env = config['theme'].get_env()
     files.add_files_from_theme(env, config)
 
-    # Run `files` plugin events.
-    # files = config['plugins'].run_event('files', files, config=config)
-
     nav = get_navigation(files, config)
     config['navigation'] = nav
-    # Run `nav` plugin events.
-    # nav = config['plugins'].run_event('nav', nav, config=config, files=files)
 
     log.debug("Reading markdown pages.")
     for file in files.documentation_pages():

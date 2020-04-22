@@ -5,6 +5,9 @@ videoCount = 0
 site_dir = ""
 imgSrcs = {}
 videoSrcs = {}
+imgVals = []
+videoVals = []
+updated = False
 import os
 
 class List:
@@ -36,8 +39,9 @@ class List:
             a1 = "</ol>"
         url = ""
         for i in self.list:
-            if i.get_url().strip() != '':
-                url += b + i.get_url().strip() + b1
+            temp = i.get_url()
+            if temp.strip() != '':
+                url += b + temp.strip() + b1
             if url.strip() == '':
                 return ''
         return a + url.strip() + a1
@@ -72,13 +76,18 @@ class Img:
         self.src = ""
 
     def add(self, s):
+        s = s.strip()
         if(self._link_validate(s)):
             if s in imgSrcs.keys() and imgSrcs[s]:
                 self.src = s
                 self.dest_src = imgSrcs[s]
             else:
                 self.src = s
-                self.dest_src = self._get_destination(s)
+                temp = self._get_destination(s).strip()
+                while temp in imgVals:
+                    temp = self._get_destination(s).strip()
+                self.dest_src = temp
+                imgVals.append(self.dest_src)
                 imgSrcs[s] = self.dest_src
                 file.write(self.src+" "+site_dir+"/"+self.dest_src+"\n")
 
@@ -90,11 +99,7 @@ class Img:
         imageCount += 1
         return "img/image"+str(imageCount)+os.path.splitext(s)[1]
 
-    def _transfer_file(self):
-        pass
-
     def get_url(self):
-        self._transfer_file()
         return "<img width=150 height=150 src=\"{}\"/>".format(self.dest_src.strip())
 
 class Video:
@@ -118,7 +123,12 @@ class Video:
             self.imgSrc = videoSrcs[self.src]
         else:
             videoCount += 1
-            self.imgSrc = "videoScreenShot/image"+str(videoCount)+'.jpg'
+            temp = "videoScreenShot/image"+str(videoCount)+'.jpg'
+            while (temp) in videoVals:
+                videoCount += 1
+                temp = "videoScreenShot/image"+str(videoCount)+'.jpg'
+            self.imgSrc = temp
+            videoVals.append(self.imgSrc)
             videoSrcs[self.src] = self.imgSrc
             videoFile.write(self.src+" "+site_dir+"/"+self.imgSrc+"\n")
 
@@ -132,7 +142,7 @@ class Link:
 
     def add(self, s):
         if s:
-            self.link = s
+            self.link = s.strip()
 
     def add_obj(self, obj):
         self.list.append(obj)
@@ -160,16 +170,23 @@ class Raw:
 
 ALL_TAGS = ["LARGE", "MEDI", "LINK", "IMG", "VIDEO", "OLIST","ULIST", "LINK", "RAW", "NORM"]
 APPEND_FUNC = {
-        "LARGE": Heading(2),
-        "MEDI" : Heading(4),
-        "LINK" : Link(),
-        "IMG" : Img(),
-        "VIDEO": Video(),
-        "OLIST" : List(2),
-        "ULIST": List(1),
-        "RAW": Raw(),
-        "NORM": Normal()
+        "LARGE": [Heading, 2],
+        "MEDI" : [Heading, 5],
+        "LINK" : [Link],
+        "IMG" : [Img],
+        "VIDEO": [Video],
+        "OLIST" : [List, 2],
+        "ULIST": [List, 1],
+        "RAW": [Raw],
+        "NORM": [Normal]
         }
+
+def appendFunc(param):
+    params = APPEND_FUNC[param]
+    if len(params) == 1:
+        return params[0]()
+    elif len(params) == 2:
+        return params[0](params[1])
 
 def find_label(string):
     for i in ALL_TAGS:
@@ -189,7 +206,7 @@ class Stack:
     def size(self):
         return len(self._list)
 
-def func(string, i, stack, strings, active = False):
+def func(string, i, stack, active = False):#strings,
     s = ''
     while i < len(string):
         s += string[i]
@@ -208,15 +225,15 @@ def func(string, i, stack, strings, active = False):
                     continue
                 if x in ['OLIST', 'ULIST', 'LINK']:
                     active = True
-                    stack.push(APPEND_FUNC[x])
-                    strings.push('')
-                    i = func(string, i, stack, strings)
+                    stack.push(appendFunc(x))
+                    #strings.push('')
+                    i = func(string, i, stack)#, strings)
                 else:
                     s = ''
                     while i < len(string) and string[i] != ')':
                         s += string[i]
                         i += 1
-                    obj = APPEND_FUNC[x]
+                    obj = appendFunc(x)
                     obj.add(s)
                     stack.top().add_obj(obj)
 
@@ -229,19 +246,40 @@ def func(string, i, stack, strings, active = False):
         i+=1
     return i
 
+def initializeSrcs(imgFileSrc, videoFileSrc):
+    global imgSrcs, videoSrcs, imgVals, videoVals, updated, site_dir
+    if not updated:
+        updated = True
+        if os.path.exists(imgFileSrc):
+            with open(imgFileSrc, 'r') as imgFile:
+                lines = imgFile.readlines()
+                for i in lines:
+                    val = i.strip().split(' ')
+                    if len(val) == 2:
+                        value = val[1].strip().replace(site_dir.strip(), "").strip()
+                        imgSrcs[val[0].strip()] = value
+                        imgVals.append(value)
+        if os.path.exists(videoFileSrc):
+            with open(videoFileSrc, 'r') as videoFile:
+                lines = videoFile.readlines()
+                for i in lines:
+                    val = i.strip().split(' ')
+                    if len(val) == 2:
+                        value = val[1].strip().replace(site_dir.strip(), "").strip()
+                        videoSrcs[val[0].strip()] = value
+                        videoVals.append(value)
+
 def parseString(string, config, fileName):
     global site_dir, file, videoFile
     site_dir = config['site_dir']
-    file = open(os.path.dirname(site_dir)+'/images.txt', "+w")
-    videoFile = open(os.path.dirname(site_dir)+'/videos.txt', "+w")
-    print("Parser entered doing the stuff")
+    initializeSrcs(os.path.dirname(site_dir)+'/images.txt', os.path.dirname(site_dir)+'/videos.txt')
+    file = open(os.path.dirname(site_dir)+'/images.txt', "a+")
+    videoFile = open(os.path.dirname(site_dir)+'/videos.txt', "a+")
     stack = Stack()
-    strings = Stack()
-    stack = Stack()
-    strings = Stack()
+    #strings = Stack()
     stack.push(List())
-    strings.push('')
-    func(string, 0, stack, strings)
+    #strings.push('')
+    func(string, 0, stack)#, strings)
     if (stack.size() == 1):
         obj = stack.pop()
         ret = obj.get_url()

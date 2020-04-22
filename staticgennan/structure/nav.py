@@ -161,7 +161,6 @@ def _data_to_navigation(data, files, config):
         ]
     title, path = data if isinstance(data, tuple) else (None, data)
     file = files.get_file_from_path(path)
-    print('nav file get_file_from_path     ', path, '     ', file)
     if file:
         return Page(title, file, config)
     return Link(title, path)
