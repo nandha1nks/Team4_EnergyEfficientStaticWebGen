@@ -1,0 +1,38 @@
+site_name: staticgennan
+site_description: Project documentation with Markdown.
+site_author: staticgennan Team
+
+repo_url: https://github.com/nandha1nks/Team4_EnergyEfficientStaticWebGen
+edit_uri: ""
+
+theme:
+    name: staticgennan
+    highlightjs: true
+    static_templates:
+        - 404.html
+    search_index_only: true
+    history_buttons: true
+    article_nav_top: true
+    article_nav_bottom: true
+    hljs_languages:
+        - yaml
+        - django
+
+nav:
+    - Home: index.md
+    - Customization: customization.md
+
+
+extra_css:
+    - css/extra.css
+
+markdown_extensions:
+    - toc:
+        permalink: 
+    - admonition
+    - def_list
+    - mdx_gh_links:
+        user: staticgennan
+        repo: staticgennan
+
+
