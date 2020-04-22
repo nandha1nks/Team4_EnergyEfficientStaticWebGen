@@ -11,13 +11,9 @@ def transferImage(config):
     for i in file.readlines():
         src, dst = i.strip().split(' ')[:2]
         dst = dst.replace('\\', '/').strip()
-        print(dst)
         src = src.replace('\\', '/').strip()
-        print(src)
         if os.path.exists(src) and not os.path.exists(dst):
             imageCompress.compress(src, 2, dst)
-            print("Compressing Image ", os.path.exists(dst))
-            print(i)
         elif not os.path.exists(src):
             print("Image Error: There is no image in the path you provided ", src)
     file.close()
@@ -32,9 +28,7 @@ def transferImage(config):
     for i in file.readlines():
         src, dst = i.strip().split(' ')[:2]
         dst = dst.replace('\\', '/').strip()
-        print(dst)
         src = src.replace('\\', '/').strip()
-        print(src)
         if os.path.exists(src) and not os.path.exists(dst):
             cam = cv2.VideoCapture(src)
             frames = []

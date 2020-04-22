@@ -4,6 +4,8 @@ import logging
 import os
 import gzip
 from urllib.parse import urlparse
+import re
+imgTagReg = re.compile(r'(<img src=.+?>)')
 
 from jinja2.exceptions import TemplateNotFound
 import jinja2
@@ -35,120 +37,6 @@ log = logging.getLogger(__name__)
 log.addFilter(DuplicateFilter())
 log.addFilter(utils.warning_filter)
 
-
-def get_context(nav, files, config, page=None, base_url=''):
-    """
-    Return the template context for a given page or template.
-    """
-
-    if page is not None:
-        base_url = utils.get_relative_url('.', page.url)
-
-    extra_javascript = utils.create_media_urls(config['extra_javascript'], page, base_url)
-
-    extra_css = utils.create_media_urls(config['extra_css'], page, base_url)
-
-    # Support SOURCE_DATE_EPOCH environment variable for "reproducible" builds.
-    # See https://reproducible-builds.org/specs/source-date-epoch/
-    timestamp = int(os.environ.get('SOURCE_DATE_EPOCH', timegm(datetime.utcnow().utctimetuple())))
-
-    return {
-        'nav': nav,
-        'pages': files.documentation_pages(),
-
-        'base_url': base_url,
-
-        'extra_css': extra_css,
-        'extra_javascript': extra_javascript,
-
-        'staticgennan_version': staticgennan.__version__,
-        'build_date_utc': datetime.utcfromtimestamp(timestamp),
-
-        'config': config,
-        'page': page,
-    }
-
-
-def _build_template(name, template, files, config, nav):
-    """
-    Return rendered output for given template as a string.
-    """
-
-    # Run `pre_template` plugin events.
-    # template = config['plugins'].run_event('pre_template', template, template_name=name, config=config)
-
-    if utils.is_error_template(name):
-        # Force absolute URLs in the nav of error pages and account for the
-        # possability that the docs root might be different than the server root.
-        # See https://github.com/staticgennan/staticgennan/issues/77.
-        # However, if site_url is not set, assume the docs root and server root
-        # are the same. See https://github.com/staticgennan/staticgennan/issues/1598.
-        base_url = urlparse(config['site_url'] or '/').path
-    else:
-        base_url = utils.get_relative_url('.', name)
-
-    context = get_context(nav, files, config, base_url=base_url)
-
-    # Run `template_context` plugin events.
-    # context = config['plugins'].run_event('template_context', context, template_name=name, config=config)
-
-    # output = template.render(context)
-    output = ""
-    # Run `post_template` plugin events.
-    # output = config['plugins'].run_event('post_template', output, template_name=name, config=config)
-
-    return output
-
-
-def _build_theme_template(template_name, env, files, config, nav):
-    """ Build a template using the theme environment. """
-
-    log.debug("Building theme template: {}".format(template_name))
-
-    try:
-        template = env.get_template(template_name)
-    except TemplateNotFound:
-        log.warning("Template skipped: '{}' not found in theme directories.".format(template_name))
-        return
-
-    output = _build_template(template_name, template, files, config, nav)
-
-    if output.strip():
-        output_path = os.path.join(config['site_dir'], template_name)
-        utils.write_file(output.encode('utf-8'), output_path)
-
-        if template_name == 'sitemap.xml':
-            log.debug("Gzipping template: %s", template_name)
-            with gzip.open('{}.gz'.format(output_path), 'wb') as f:
-                f.write(output.encode('utf-8'))
-    else:
-        log.info("Template skipped: '{}' generated empty output.".format(template_name))
-
-
-def _build_extra_template(template_name, files, config, nav):
-    """ Build user templates which are not part of the theme. """
-
-    log.debug("Building extra template: {}".format(template_name))
-
-    file = files.get_file_from_path(template_name)
-    if file is None:
-        log.warning("Template skipped: '{}' not found in docs_dir.".format(template_name))
-        return
-
-    try:
-        with open(file.abs_src_path, 'r', encoding='utf-8', errors='strict') as f:
-            template = jinja2.Template(f.read())
-    except Exception as e:
-        log.warning("Error reading template '{}': {}".format(template_name, e))
-        return
-
-    output = _build_template(template_name, template, files, config, nav)
-
-    if output.strip():
-        utils.write_file(output.encode('utf-8'), file.abs_dest_path)
-    else:
-        log.info("Template skipped: '{}' generated empty output.".format(template_name))
-
 def _populate_nav(page, nav, dirty=False):
     code = ""
     for i in nav:
@@ -172,18 +60,10 @@ def _populate_page(page, config, files, dirty=False):
         if dirty and not page.file.is_modified():
             return
 
-        # Run the `pre_page` plugin event
-        # page = config['plugins'].run_event('pre_page', page, config=config, files=files)
-
         page.read_source(config)
-
-        # Run `page_markdown` plugin events.
-        # page.markdown = config['plugins'].run_event('page_markdown', page.markdown, page=page, config=config, files=files)
 
         page.render(config, files)
 
-        # Run `page_content` plugin events.
-        # page.content = config['plugins'].run_event('page_content', page.content, page=page, config=config, files=files)
     except Exception as e:
         log.error("Error reading page '{}': {}".format(page.file.src_path, e))
         raise
@@ -202,15 +82,7 @@ def _build_page(page, config, files, nav, env, dirty=False):
 
         # Activate page. Signals to theme that this is the current page.
         page.active = True
-        '''
-        context = get_context(nav, files, config, page)
 
-        # Allow 'template:' override in md source files.
-        if 'template' in page.meta:
-            template = env.get_template(page.meta['template'])
-        else:
-            template = env.get_template('main.html')
-        '''
         # Render the template.
         output = html_head + page.content.strip() + html_footer
 
@@ -226,6 +98,25 @@ def _build_page(page, config, files, nav, env, dirty=False):
         log.error("Error building page '{}': {}".format(page.file.src_path, e))
         raise
 
+def _isPageViable(content, siteDir):
+    size = len(content)
+    imageTags = imgTagReg.findall(content)
+    imageTags = set(imageTags)
+    for i in imageTags:
+        i = i.strip()
+        temp = ""
+        j = 10
+        while i[j] != '\"' and i[j] != '\'':
+            temp += i[j]
+            j+=1
+        dst = siteDir + '/' + temp
+        dst = dst.replace('\\', '/')
+        if os.path.exists(dst):
+            size += os.stat(dst).st_size
+    size = size / 1024 / 1024
+    if size>5:
+        return False
+    return True
 
 def build(config, live_server=False, dirty=False):
     """ Perform a full site build. """
@@ -252,7 +143,6 @@ def build(config, live_server=False, dirty=False):
     files.add_files_from_theme(env, config)
 
     nav = get_navigation(files, config)
-    config['navigation'] = nav
 
     log.debug("Reading markdown pages.")
     for file in files.documentation_pages():
@@ -270,14 +160,17 @@ def build(config, live_server=False, dirty=False):
     log.debug("Copying static assets.")
     files.copy_static_files(dirty=dirty)
 
+    transferFiles.transferImage(config)
+
     log.debug("Building markdown pages.")
     for file in files.documentation_pages():
-        _build_page(file.page, config, files, nav, env, dirty)
+        if _isPageViable(file.page.content, config['site_dir']):
+            _build_page(file.page, config, files, nav, env, dirty)
+        else:
+            print("Build Error: ", file.page.title, " is overloaded, reduce the size to build")
 
     if config['strict'] and utils.warning_filter.count:
         raise SystemExit('\nExited with {} warnings in strict mode.'.format(utils.warning_filter.count))
-
-    transferFiles.transferImage(config)
 
     log.info('Documentation built in %.2f seconds', time() - start)
 

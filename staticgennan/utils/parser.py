@@ -100,7 +100,7 @@ class Img:
         return "img/image"+str(imageCount)+os.path.splitext(s)[1]
 
     def get_url(self):
-        return "<img width=150 height=150 src=\"{}\"/>".format(self.dest_src.strip())
+        return "<img src=\"{}\" width=150 height=150/>".format(self.dest_src.strip())
 
 class Video:
     def __init__(self):
@@ -133,7 +133,7 @@ class Video:
             videoFile.write(self.src+" "+site_dir+"/"+self.imgSrc+"\n")
 
     def get_url(self):
-        return "<a href=\"{}\"><img width=100 height=100 src=\"{}\"/></a>".format(self.link.strip(), self.imgSrc.strip())
+        return "<a href=\"{}\"><img src=\"{}\" width=100 height=100/></a>".format(self.link.strip(), self.imgSrc.strip())
 
 class Link:
     def __init__(self):
