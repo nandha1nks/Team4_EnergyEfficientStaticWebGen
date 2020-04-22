@@ -8,6 +8,7 @@ videoSrcs = {}
 imgVals = []
 videoVals = []
 updated = False
+pageName = ""
 import os
 
 class List:
@@ -100,7 +101,11 @@ class Img:
         return "img/image"+str(imageCount)+os.path.splitext(s)[1]
 
     def get_url(self):
-        return "<img src=\"{}\" width=150 height=150/>".format(self.dest_src.strip())
+        global pageName
+        if pageName!="index":
+            return "<img src=\"../{}\" width=150 height=150/>".format(self.dest_src.strip())
+        else:
+            return "<img src=\"{}\" width=150 height=150/>".format(self.dest_src.strip())
 
 class Video:
     def __init__(self):
@@ -270,7 +275,8 @@ def initializeSrcs(imgFileSrc, videoFileSrc):
                         videoVals.append(value)
 
 def parseString(string, config, fileName):
-    global site_dir, file, videoFile
+    global site_dir, file, videoFile, pageName
+    pageName = fileName
     site_dir = config['site_dir']
     initializeSrcs(os.path.dirname(site_dir)+'/images.txt', os.path.dirname(site_dir)+'/videos.txt')
     file = open(os.path.dirname(site_dir)+'/images.txt', "a+")

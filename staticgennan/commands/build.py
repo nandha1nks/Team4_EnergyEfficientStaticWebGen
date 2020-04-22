@@ -17,7 +17,7 @@ from staticgennan.structure.nav import get_navigation
 import staticgennan
 
 html_head = "<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><link rel='stylesheet' type='text/css' href='./css/base.css'></head><body class='%s'>"
-
+nonIndex_html_head = "<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><link rel='stylesheet' type='text/css' href='../css/base.css'></head><body class='%s'>"
 html_footer = "</body></html>"
 
 
@@ -41,7 +41,7 @@ def _populate_nav(page, nav, dirty=False):
     code = ""
     for i in nav:
         if i.is_section:
-            code += "<a href=\"#\">{}</a>".format(i.title)+"<div class=\"section\">" +_populate_nav(page,  i.children, dirty)+ "</div>"
+            code += "<a href=\"#\">./{}</a>".format(i.title)+"<div class=\"section\">" +_populate_nav(page,  i.children, dirty)+ "</div>"
         elif i.is_page:
             if i.title == page.title:
                 code += "<a href=\"{}\" class=\"active\">{}</a>".format(i.file.dest_path, i.title)
@@ -84,7 +84,10 @@ def _build_page(page, config, files, nav, env, dirty=False):
         page.active = True
 
         # Render the template.
-        output = html_head + page.content.strip() + html_footer
+        if page.file.src_path == "index.md":
+            output = html_head + page.content.strip() + html_footer
+        else:
+            output = nonIndex_html_head + page.content.strip() + html_footer
 
         # Write the output file.
         if output.strip():

@@ -7,7 +7,7 @@ def transferImage(config):
         return
     file = open(os.path.dirname(config['site_dir'])+'/images.txt', "r")
     if not os.path.isdir(config['site_dir']+'/img'):
-        os.mkdir(config['site_dir']+'/img')
+        os.mkdir((config['site_dir']+'/img').replace('\\','/'))
     for i in file.readlines():
         src, dst = i.strip().split(' ')[:2]
         dst = dst.replace('\\', '/').strip()
@@ -23,7 +23,7 @@ def transferImage(config):
     if not os.path.exists(os.path.dirname(config['site_dir'])+'/videos.txt'):
         return
     file = open(os.path.dirname(config['site_dir'])+'/videos.txt', "r")
-    if os.path.isdir(config['site_dir']+'/videoScreenShot'):
+    if not os.path.isdir(config['site_dir']+'/videoScreenShot'):
         os.mkdir(config['site_dir']+'/videoScreenShot')
     for i in file.readlines():
         src, dst = i.strip().split(' ')[:2]
