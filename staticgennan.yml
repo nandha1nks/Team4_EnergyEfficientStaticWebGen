@@ -10,17 +10,12 @@ theme:
     highlightjs: true
     static_templates:
         - 404.html
-    search_index_only: true
-    history_buttons: true
-    article_nav_top: true
-    article_nav_bottom: true
     hljs_languages:
         - yaml
         - django
 
 nav:
     - Home: index.md
-    - Customization: customization.md
 
 
 extra_css:
