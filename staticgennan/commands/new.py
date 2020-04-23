@@ -2,23 +2,10 @@ import logging
 import os
 
 config_text = 'site_name: My Docs\n'
-index_text = """# Welcome to staticgennan
-
-For full documentation visit [staticgennan.org](https://www.staticgennan.org).
-
-## Commands
-
-* `staticgennan new [dir-name]` - Create a new project.
-* `staticgennan serve` - Start the live-reloading docs server.
-* `staticgennan build` - Build the documentation site.
-* `staticgennan -h` - Print help message and exit.
-
-## Project layout
-
-    staticgennan.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+index_text = """
+    #LARGE(This is STATICGENNAN layout)
+    #MEDI(Created by Nandha, Ali, Abishekh)
+    #NORM(Aim to build a energy efficient website)
 """
 
 log = logging.getLogger(__name__)

@@ -253,10 +253,8 @@ def path_to_url(path):
 
 def get_theme_dir(name):
     """ Return the directory of an installed theme by name. """
-    print("name   ", name)
+
     theme = get_themes()[name]
-    print("theme   ", theme)
-    print("theme    ", theme.load().__file__)
     return os.path.dirname(os.path.abspath(theme.load().__file__))
 
 
