@@ -44,12 +44,12 @@ def _populate_nav(page, nav, dirty=False):
             code += "<a href=\"#\">./{}</a>".format(i.title)+"<div class=\"section\">" +_populate_nav(page,  i.children, dirty)+ "</div>"
         elif i.is_page:
             if i.title == page.title:
-                code += "<a href=\"#\" class=\"active\">{}</a>".format(i.file.dest_path, i.title)
-            elif page.file.path == "index.md":
+                code += "<a href=\"#\" class=\"active\">{}</a>".format(i.title)
+            elif page.file.src_path == "index.md":
                 code += "<a href=\"{}\">{}</a>".format(i.file.dest_path, i.title)
             else:
                 code += "<a href=\"../{}\">{}</a>".format(i.file.dest_path, i.title)
-        elif i.is_link and page.file.path == "index.md":
+        elif i.is_link and page.file.src_path == "index.md":
             code += "<a href=\"{}\">{}></a>".format(i.url, i.path)++"<div class=\"section\">" +_populate_nav(page, i.children, dirty)+ "</div>"
         elif i.is_link:
             code += "<a href=\"../{}\">{}></a>".format(i.url, i.path)++"<div class=\"section\">" +_populate_nav(page, i.children, dirty)+ "</div>"
