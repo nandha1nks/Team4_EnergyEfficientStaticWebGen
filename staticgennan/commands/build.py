@@ -147,7 +147,6 @@ def build(config, live_server=False, dirty=False):
             log.info("The directory contains stale files. Use --clean to remove them.")
 
     # First gather all data from all files/pages to ensure all data is consistent across all pages.
-    return
     files = get_files(config)
     env = config['theme'].get_env()
     files.add_files_from_theme(env, config)

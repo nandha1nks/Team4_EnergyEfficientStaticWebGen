@@ -17,8 +17,6 @@ def transferImage(config):
         elif not os.path.exists(src):
             print("Image Error: There is no image in the path you provided ", src)
     file.close()
-    #os.remove(os.path.dirname(config['site_dir'])+'/images.txt')
-    #print("Image uploading done")
 
     if not os.path.exists(os.path.dirname(config['site_dir'])+'/videos.txt'):
         return
@@ -26,7 +24,7 @@ def transferImage(config):
     if not os.path.isdir(config['site_dir']+'/videoScreenShot'):
         os.mkdir(config['site_dir']+'/videoScreenShot')
     for i in file.readlines():
-        src, dst = i.strip().split(' ')[:2]
+        src, dst, _ = i.strip().split(' ')[:3]
         dst = dst.replace('\\', '/').strip()
         src = src.replace('\\', '/').strip()
         if os.path.exists(src) and not os.path.exists(dst):
@@ -47,5 +45,3 @@ def transferImage(config):
             print("Video Error: There is no video in the path you provided ", src)
     cv2.destroyAllWindows()
     file.close()
-    #os.remove(os.path.dirname(config['site_dir'])+'/videos.txt')
-    #print("Video uploading done")

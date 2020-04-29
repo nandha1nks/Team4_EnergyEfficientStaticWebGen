@@ -1,0 +1,22 @@
+{
+  "name": "videoupload",
+  "version": "1.0.0",
+  "description": "Simple Video Uploader and Viewer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Nothing"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-fileupload": "^1.1.7-alpha.3",
+    "uuid": "^3.3.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}

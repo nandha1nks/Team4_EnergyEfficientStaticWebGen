@@ -9,7 +9,7 @@ import sys
 long_description = (
     "staticgennan is a fast, simple and downright gorgeous static site generator "
     "that's geared towards building project documentation. Documentation "
-    "source files are written in Markdown, and configured with a single YAML "
+    "source files are written in Markdown specified by us, and configured with a single YAML "
     "configuration file."
 )
 
@@ -49,7 +49,7 @@ setup(
     license='BSD',
     description='Project documentation with Markdown.',
     long_description=long_description,
-    author='Abishekh Parival Aliasgar Musani Nandha Kumar',
+    author='Abishekh Parivel, Aliasgar Musani, Nandhakumar',
     author_email='cs17b003@iittp.ac.in',  # SEE NOTE BELOW (*)
     packages=get_packages("staticgennan"),
     include_package_data=True,
@@ -59,7 +59,7 @@ setup(
         'livereload>=2.5.1',
         'Markdown>=3.2.1',
         'PyYAML>=3.10',
-        'tornado>=5.0'
+        'tornado>=5.0',
     ],
     python_requires='>=3.5',
     entry_points={
@@ -89,6 +89,7 @@ setup(
         'Topic :: Documentation',
         'Topic :: Text Processing',
     ],
+    dependency_links=['https://github.com/UBC-MDS/image-compression-toolkit-python.git'],
     zip_safe=False,
 )
 

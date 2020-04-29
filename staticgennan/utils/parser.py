@@ -5,11 +5,13 @@ videoCount = 0
 site_dir = ""
 imgSrcs = {}
 videoSrcs = {}
+videoLinks = {}
 imgVals = []
 videoVals = []
 updated = False
 pageName = ""
 import os
+from staticgennan.utils.videoUpload import uploadVideo
 
 class List:
     def __init__(self, typ = 0):
@@ -109,7 +111,7 @@ class Img:
 
 class Video:
     def __init__(self):
-        self.link = ""
+        self.link = "#"
 
     def add(self,s):
         if(self._link_validate(s)):
@@ -122,11 +124,16 @@ class Video:
         return True
 
     def _transfer_file(self):
-        self.link = "https://www.google.com"
         global videoCount, videoSrcs, videoFile
-        if self.src in videoSrcs.keys() and videoSrcs[self.src]:
+        if self.src in videoSrcs.keys() and self.src in videoLinks.keys():
             self.imgSrc = videoSrcs[self.src]
+            self.link = videoLinks[self.src]
         else:
+            self.link = uploadVideo(self.src)
+            if self.link == '#':
+                print('Video with path ', self.src , ' is not uploaded.')
+            else:
+                self.link = "http://localhost:3000/"+self.link
             videoCount += 1
             temp = "videoScreenShot/image"+str(videoCount)+'.jpg'
             while (temp) in videoVals:
@@ -134,8 +141,8 @@ class Video:
                 temp = "videoScreenShot/image"+str(videoCount)+'.jpg'
             self.imgSrc = temp
             videoVals.append(self.imgSrc)
-            videoSrcs[self.src] = self.imgSrc
-            videoFile.write(self.src+" "+site_dir+"/"+self.imgSrc+"\n")
+            videoSrcs[self.src] = self.imgSrc.strip()
+            videoFile.write(self.src+" "+site_dir+"/"+self.imgSrc.strip()+" " +self.link  +"\n")
 
     def get_url(self):
         return "<a href=\"{}\"><img src=\"{}\" width=100 height=100/></a>".format(self.link.strip(), self.imgSrc.strip())
@@ -269,9 +276,10 @@ def initializeSrcs(imgFileSrc, videoFileSrc):
                 lines = videoFile.readlines()
                 for i in lines:
                     val = i.strip().split(' ')
-                    if len(val) == 2:
+                    if len(val) == 3:
                         value = val[1].strip().replace(site_dir.strip(), "").strip()
                         videoSrcs[val[0].strip()] = value
+                        videoLinks[val[0].strip()] = val[2].strip()
                         videoVals.append(value)
 
 def parseString(string, config, fileName):
