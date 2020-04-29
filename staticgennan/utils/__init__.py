@@ -110,6 +110,54 @@ def write_file(content, output_path):
     with open(output_path, 'wb') as f:
         f.write(content)
 
+def clean_img_directory(directory, img = True):
+    if img:
+        typedir = 'img'
+        typefile = 'images.txt'
+    else:
+        typedir = 'videoUpload'
+        typefile = 'videos.txt'
+    if not os.path.exists(os.path.join(directory,typedir)):
+        if os.path.exists(os.path.join(os.path.dirname(directory), typefile)):
+            os.unlink(os.path.join(os.path.dirname(directory), typefile));
+        return
+    if not os.path.exists(os.path.join(os.path.dirname(directory), typefile)):
+        if os.path.exists(os.path.join(directory,typedir)):
+            shutil.rmtree(os.path.join(directory,typedir), True)
+        return
+    imgFiles = os.listdir(os.path.join(directory, typedir));
+    imgIndexFile = open(os.path.join(os.path.dirname(directory),'images.txt'), "r")
+    imgIndexFileLines = imgIndexFile.readlines()
+    removeIndices = []
+    fileNames = []
+    indexCount = 0
+    for i in imgIndexFileLines:
+        src, dst = i.strip().split(' ')[:2]
+        dst = dst.replace('\\', '/').strip()
+        src = src.replace('\\', '/').strip()
+        if os.path.exists(src) and not os.path.exists(dst):
+            removeIndices.append(indexCount)
+        elif not os.path.exists(src):
+            removeIndices.insert(0, indexCount)
+        else:
+            fileNames.append(os.path.basename(dst))
+        indexCount+=1;
+    imgIndexFile.close()
+    with open(os.path.join(os.path.dirname(directory),'images.txt'), "w") as f:
+        for i in range(len(imgIndexFileLines)):
+            if i not in removeIndices:
+                f.write(imgIndexFileLines[i])
+    for entry in os.listdir(os.path.join(directory, typedir)):
+        if entry.startswith('.'):
+            continue
+        if entry not in fileNames:
+            path = os.path.join(directory,typedir, entry)
+            if os.path.isdir(path):
+                print(path)
+                shutil.rmtree(path, True)
+            else:
+                os.unlink(path)
+    return
 
 def clean_directory(directory):
     """
@@ -124,7 +172,8 @@ def clean_directory(directory):
         # that are hidden, so we shouldn't delete them either.
         if entry.startswith('.'):
             continue
-
+        if entry == 'img' or entry == 'videoUpload':
+            continue
         path = os.path.join(directory, entry)
         if os.path.isdir(path):
             shutil.rmtree(path, True)

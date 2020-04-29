@@ -134,6 +134,8 @@ def build(config, live_server=False, dirty=False):
     if not dirty:
         log.info("Cleaning site directory")
         utils.clean_directory(config['site_dir'])
+        utils.clean_img_directory(config['site_dir'])
+        utils.clean_img_directory(config['site_dir'], False)
     else:  # pragma: no cover
         # Warn user about problems that may occur with --dirty option
         log.warning("A 'dirty' build is being performed, this will likely lead to inaccurate navigation and other"
@@ -145,7 +147,7 @@ def build(config, live_server=False, dirty=False):
             log.info("The directory contains stale files. Use --clean to remove them.")
 
     # First gather all data from all files/pages to ensure all data is consistent across all pages.
-
+    return
     files = get_files(config)
     env = config['theme'].get_env()
     files.add_files_from_theme(env, config)
